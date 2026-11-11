@@ -1,4 +1,4 @@
-name: Playwright Tests
+name: API Tests
 on:
     push:
         branches: [main]
@@ -6,21 +6,17 @@ on:
         branches: [main]
 jobs:
     test:
-        timeout-minutes: 60
+        timeout-minutes: 30
         runs-on: ubuntu-latest
         services:
             petclinic:
                 image: springcommunity/spring-petclinic-rest
                 env:
                     PETCLINIC_SECURITY_ENABLE: 'true'
-        container:
-            image: mcr.microsoft.com/playwright:v1.62.0-noble
+                ports:
+                    - 9966:9966
         env:
-            BASE_URL: https://www.saucedemo.com
-            USERNAME: standard_user
-            LOCKED_OUT_USERNAME: locked_out_user
-            PASSWORD: secret_sauce
-            API_BASE_URL: http://petclinic:9966
+            API_BASE_URL: http://localhost:9966
             API_ADMIN_USERNAME: admin
             API_ADMIN_PASSWORD: admin
         steps:
@@ -45,9 +41,6 @@ jobs:
 
             - name: Run Playwright tests
               run: npx playwright test
-              env:
-                  # Required for Firefox to start correctly in the Playwright Docker container
-                  HOME: /root
 
             - uses: actions/upload-artifact@v6
               if: ${{ !cancelled() }}

@@ -1,8 +1,8 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig } from '@playwright/test';
 import { env } from './config/env';
 
 export default defineConfig({
-    testDir: './tests/ui',
+    testDir: './tests',
     timeout: 20_000,
     /* Run tests in files in parallel */
     fullyParallel: true,
@@ -18,38 +18,14 @@ export default defineConfig({
         ['github'],
         ['html', { open: 'on-failure', outputFolder: 'playwright-report' }],
     ],
-    /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
     use: {
-        baseURL: env.baseUrl,
-        testIdAttribute: 'data-test',
-
+        baseURL: env.apiBaseUrl,
+        httpCredentials: {
+            username: env.apiAdminUsername,
+            password: env.apiAdminPassword,
+        },
         trace: 'on-first-retry',
     },
-
-    /* Configure projects for major browsers and the 3rd one for api tests */
-    projects: [
-        {
-            name: 'chromium',
-            use: { ...devices['Desktop Chrome'] },
-        },
-
-        {
-            name: 'firefox',
-            use: { ...devices['Desktop Firefox'] },
-        },
-
-        {
-            name: 'api',
-            testDir: './tests/api',
-            use: {
-                baseURL: env.apiBaseUrl,
-                httpCredentials: {
-                    username: env.apiAdminUsername,
-                    password: env.apiAdminPassword,
-                },
-            },
-        },
-    ],
 
     webServer: process.env.CI
         ? undefined
@@ -57,7 +33,7 @@ export default defineConfig({
               command:
                   'docker run --rm -e PETCLINIC_SECURITY_ENABLE=true -p 9966:9966 springcommunity/spring-petclinic-rest',
               url: `${env.apiBaseUrl}/petclinic/actuator/health`,
-              reuseExistingServer: !process.env.CI,
+              reuseExistingServer: true,
 
               gracefulShutdown: {
                   signal: 'SIGTERM',
