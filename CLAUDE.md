@@ -22,7 +22,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Layered, all wired through a Playwright fixture:
 
 - `fixtures/fixtures.ts` — extends `test` with a `client` fixture (`PetClinicAPIClient`). Tests import `test`/`expect` from here, not from `@playwright/test`.
-- `clients/pet-clinic-api-client.ts` — facade holding one sub-client per resource (currently `petTypes`). New resources: add a `*-api-client.ts` and expose it here.
+- `utils/cleanup-registry.ts` — per-test stack of undo actions. The `client` fixture creates one per test, passes it to the clients and runs it at teardown: newest first (children before parents), 2xx/404 count as success, every action is attempted, and any other failure fails the test. Tests need no manual cleanup; only ids returned to the test are deleted, so the suite is safe against long-lived environments.
+- `clients/pet-clinic-api-client.ts` — facade holding one sub-client per resource (`petTypes`, `owners`, `pets`). New resources: add a `*-api-client.ts`, pass it the `CleanupRegistry`, and expose it here.
+- Every `createRaw` must register the matching delete with the registry when the response is 201 (happy-path `create` goes through `createRaw`, so it is covered too).
 - `clients/pet-types-api-client.ts` — two-level convention for every client method:
     - `*Raw` methods return the untouched `APIResponse` — use in negative tests and assert status/body in the test.
     - Unsuffixed methods are happy-path: assert the expected status (via `expectStatus`, with the response body in the failure message) and return typed data.

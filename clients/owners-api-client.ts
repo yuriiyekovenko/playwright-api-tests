@@ -1,4 +1,5 @@
 import { expect, type APIRequestContext, type APIResponse } from '@playwright/test';
+import type { CleanupRegistry } from '../utils/cleanup-registry';
 import type { CreateOwner, Owner } from '../types/owners';
 
 /**
@@ -10,12 +11,22 @@ import type { CreateOwner, Owner } from '../types/owners';
 export class OwnersAPIClient {
     private readonly resourcePath = '/petclinic/api/owners';
 
-    constructor(private readonly request: APIRequestContext) {}
+    constructor(
+        private readonly request: APIRequestContext,
+        /** Optional: when given, every created resource is registered for deletion. */
+        private readonly cleanup?: CleanupRegistry,
+    ) {}
 
     // ---- raw ----
 
-    createRaw(payload: unknown): Promise<APIResponse> {
-        return this.request.post(this.resourcePath, { data: payload });
+    /** Registers the created Owner for deletion (if a registry is given) whenever the service returns 201. */
+    async createRaw(payload: unknown): Promise<APIResponse> {
+        const response = await this.request.post(this.resourcePath, { data: payload });
+        if (this.cleanup && response.status() === 201) {
+            const { id } = await response.json();
+            this.cleanup.add(`DELETE Owner ${id}`, () => this.deleteRaw(id));
+        }
+        return response;
     }
 
     getAllRaw(lastName?: string): Promise<APIResponse> {

@@ -1,37 +1,10 @@
 import type { APIResponse } from '@playwright/test';
 import { test, expect } from '../../fixtures/fixtures';
 import { OwnerFactory } from '../../factories/owner-factory';
-import type { PetClinicAPIClient } from '../../clients/pet-clinic-api-client';
 import type { CreateOwner } from '../../types/owners';
 
 const NON_EXISTING_ID = 2147483647;
 const REQUIRED_FIELDS = ['firstName', 'lastName', 'address', 'city', 'telephone'] as const;
-
-/* Owners created by the current test; removed afterwards. Only own data is ever deleted.
- Even if these tests are executed concurrently with multiple workers, they have separate createdOwnerIds in every worker so no collisions happen.
- */
-const createdOwnerIds: number[] = [];
-
-test.afterEach(async ({ client }) => {
-    for (const id of createdOwnerIds.splice(0)) {
-        await client.owners.deleteRaw(id);
-    }
-});
-
-async function createOwner(client: PetClinicAPIClient, payload: CreateOwner) {
-    const owner = await client.owners.create(payload);
-    createdOwnerIds.push(owner.id);
-    return owner;
-}
-
-// Raw create that registers the owner for cleanup whenever the service returns 201 (expected or not).
-async function createOwnerRaw(client: PetClinicAPIClient, payload: unknown) {
-    const response = await client.owners.createRaw(payload);
-    if (response.status() === 201) {
-        createdOwnerIds.push((await response.json()).id);
-    }
-    return response;
-}
 
 async function expectValidationError(response: APIResponse, ...fields: string[]) {
     expect(response.status()).toBe(400);
@@ -52,7 +25,7 @@ async function expectValidationError(response: APIResponse, ...fields: string[])
 
 test('OWN-C-01 Create owner with valid data', async ({ client }) => {
     const payload = OwnerFactory.random();
-    const response = await createOwnerRaw(client, payload);
+    const response = await client.owners.createRaw(payload);
     expect(response.status()).toBe(201);
     expect(response.headers()['content-type']).toContain('application/json');
     const owner = await response.json();
@@ -60,12 +33,12 @@ test('OWN-C-01 Create owner with valid data', async ({ client }) => {
 });
 
 test('OWN-C-02 Created owner is retrievable and identical', async ({ client }) => {
-    const created = await createOwner(client, OwnerFactory.random());
+    const created = await client.owners.create(OwnerFactory.random());
     expect(await client.owners.get(created.id)).toEqual(created);
 });
 
 test('OWN-C-03 Created owner appears in list', async ({ client }) => {
-    const owner = await createOwner(client, OwnerFactory.random());
+    const owner = await client.owners.create(OwnerFactory.random());
     const owners = await client.owners.getAll(owner.lastName);
     expect(owners).toContainEqual(owner);
 });
@@ -76,7 +49,7 @@ test('OWN-C-04 Server assigns id; client-supplied id and pets are ignored', asyn
         id: 99999,
         pets: [{ name: 'Ghost', birthDate: '2020-01-01', type: { id: 1, name: 'cat' } }],
     };
-    const response = await createOwnerRaw(client, payload);
+    const response = await client.owners.createRaw(payload);
     expect(response.status()).toBe(201);
     const owner = await response.json();
     expect(owner.id).not.toBe(99999);
@@ -85,8 +58,8 @@ test('OWN-C-04 Server assigns id; client-supplied id and pets are ignored', asyn
 
 test('OWN-C-05 Two creates of identical payload yield distinct ids', async ({ client }) => {
     const payload = OwnerFactory.random();
-    const first = await createOwner(client, payload);
-    const second = await createOwner(client, payload);
+    const first = await client.owners.create(payload);
+    const second = await client.owners.create(payload);
     expect(first.id).not.toBe(second.id);
 });
 
@@ -99,26 +72,26 @@ for (const field of REQUIRED_FIELDS) {
     test(`OWN-C-07 Create owner fails when ${field} is missing`, async ({ client }) => {
         const payload: Partial<CreateOwner> = OwnerFactory.random();
         delete payload[field];
-        await expectValidationError(await createOwnerRaw(client, payload), field);
+        await expectValidationError(await client.owners.createRaw(payload), field);
     });
 
     test(`OWN-C-09 Create owner fails when ${field} is empty`, async ({ client }) => {
         const payload = { ...OwnerFactory.random(), [field]: '' };
-        await expectValidationError(await createOwnerRaw(client, payload), field);
+        await expectValidationError(await client.owners.createRaw(payload), field);
     });
 }
 
 for (const field of REQUIRED_FIELDS) {
     test(`OWN-C-08 Create owner fails when ${field} is null`, async ({ client }) => {
         const payload = { ...OwnerFactory.random(), [field]: null };
-        await expectValidationError(await createOwnerRaw(client, payload), field);
+        await expectValidationError(await client.owners.createRaw(payload), field);
     });
 }
 
 // ---------- Get ----------
 
 test('OWN-G-01 Get existing owner matches schema', async ({ client }) => {
-    const created = await createOwner(client, OwnerFactory.random());
+    const created = await client.owners.create(OwnerFactory.random());
     const owner = await client.owners.get(created.id);
     expect(owner).toEqual({
         id: expect.any(Number),
@@ -184,7 +157,7 @@ test('OWN-L-01 List all owners matches schema', async ({ client }) => {
 });
 
 test('OWN-L-02 Filter by existing lastName', async ({ client }) => {
-    const owner = await createOwner(client, OwnerFactory.random());
+    const owner = await client.owners.create(OwnerFactory.random());
     const owners = await client.owners.getAll(owner.lastName);
     expect(owners.map((o) => o.id)).toContain(owner.id);
     for (const o of owners) {
@@ -207,14 +180,14 @@ test('OWN-L-03 List owners with no matching lastName returns empty list', async 
 // ---------- Update ----------
 
 test('OWN-U-01 Update all fields of existing owner', async ({ client }) => {
-    const owner = await createOwner(client, OwnerFactory.random());
+    const owner = await client.owners.create(OwnerFactory.random());
     const response = await client.owners.updateRaw(owner.id, OwnerFactory.random());
     expect(response.status()).toBe(204);
     expect(await response.text()).toBe('');
 });
 
 test('OWN-U-02 Update is persisted', async ({ client }) => {
-    const owner = await createOwner(client, OwnerFactory.random());
+    const owner = await client.owners.create(OwnerFactory.random());
     const newData = OwnerFactory.random();
     await client.owners.update(owner.id, newData);
     expect(await client.owners.get(owner.id)).toEqual({
@@ -232,14 +205,14 @@ test('OWN-U-04 Update non-existent owner returns 404', async ({ client }) => {
 // ---------- Delete ----------
 
 test('OWN-D-01 Delete existing owner', async ({ client }) => {
-    const owner = await createOwner(client, OwnerFactory.random());
+    const owner = await client.owners.create(OwnerFactory.random());
     const response = await client.owners.deleteRaw(owner.id);
     expect(response.status()).toBe(204);
     expect(await response.text()).toBe('');
 });
 
 test('OWN-D-02 Deleted owner is gone', async ({ client }) => {
-    const owner = await createOwner(client, OwnerFactory.random());
+    const owner = await client.owners.create(OwnerFactory.random());
     await client.owners.delete(owner.id);
 
     expect((await client.owners.getRaw(owner.id)).status()).toBe(404);
@@ -252,7 +225,7 @@ test('OWN-D-02 Deleted owner is gone', async ({ client }) => {
 test('OWN-D-03 Delete non-existent and already deleted owner returns 404', async ({ client }) => {
     expect((await client.owners.deleteRaw(NON_EXISTING_ID)).status()).toBe(404);
 
-    const owner = await createOwner(client, OwnerFactory.random());
+    const owner = await client.owners.create(OwnerFactory.random());
     await client.owners.delete(owner.id);
     expect((await client.owners.deleteRaw(owner.id)).status()).toBe(404);
 });
