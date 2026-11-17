@@ -12,14 +12,15 @@ const NON_EXISTING_ID = 2147483647;
 type PetsFixtures = {
     /** Fresh owner per test; it and its pets are removed by the client's cleanup after the test. */
     owner: Owner;
-    /** Seeded pet types, read-only. */
+    /** Two existing pet types, read-only. */
     petTypes: [PetType, PetType];
 };
 
 const test = base.extend<PetsFixtures>({
     petTypes: async ({ client }, use) => {
-        const types = await client.petTypes.getAll();
-        await use([types[0], types[1]]);
+        const [first, second] = await client.petTypes.getAll();
+        expect(second, 'Pets tests need at least 2 existing pet types').toBeDefined();
+        await use([first, second]);
     },
     owner: async ({ client }, use) => {
         await use(await client.owners.create(OwnerFactory.random()));
