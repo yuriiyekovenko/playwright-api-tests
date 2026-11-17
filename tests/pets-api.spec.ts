@@ -1,11 +1,11 @@
 import { request as playwrightRequest } from '@playwright/test';
-import { test as base, expect } from '../../fixtures/fixtures';
-import { OwnerFactory } from '../../factories/owner-factory';
-import { PetFactory } from '../../factories/pet-factory';
-import type { PetType } from '../../types/pet-types';
-import type { Owner } from '../../types/owners';
-import type { Pet } from '../../types/pets';
-import { env } from '../../config/env';
+import { test as base, expect } from '../fixtures/fixtures';
+import { OwnerFactory } from '../factories/owner-factory';
+import { PetFactory } from '../factories/pet-factory';
+import type { PetType } from '../types/pet-types';
+import type { Owner } from '../types/owners';
+import type { Pet } from '../types/pets';
+import { env } from '../config/env';
 
 const NON_EXISTING_ID = 2147483647;
 

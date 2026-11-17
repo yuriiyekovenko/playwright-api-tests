@@ -1,7 +1,7 @@
 import type { APIResponse } from '@playwright/test';
-import { test, expect } from '../../fixtures/fixtures';
-import { OwnerFactory } from '../../factories/owner-factory';
-import type { CreateOwner } from '../../types/owners';
+import { test, expect } from '../fixtures/fixtures';
+import { OwnerFactory } from '../factories/owner-factory';
+import type { CreateOwner } from '../types/owners';
 
 const NON_EXISTING_ID = 2147483647;
 const REQUIRED_FIELDS = ['firstName', 'lastName', 'address', 'city', 'telephone'] as const;

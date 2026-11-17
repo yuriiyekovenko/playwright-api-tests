@@ -73,7 +73,7 @@ Existing PetTypes spec convention: 400 bodies are asserted with `detail: 'The re
 
 ## 4. Existing coverage
 
-- `tests/api/pet-types-api.spec.ts` covers PetTypes only.
+- `tests/pet-types-api.spec.ts` covers PetTypes only.
 - No owners client, types, factory or spec exists. Existing coverage of Owners: **none**.
 - Framework facts: tests use `client` fixture; clients have `*Raw` and happy-path methods; the happy-path method asserts a status (so D2/D3 would fail inside `update`/`delete` if it is coded to the documented 200; expected status is 204, see Q1). `fakeId()` is a local helper in the PetTypes spec (2^30..2^31-1) and would need to be shared.
 - Auth is applied globally through `httpCredentials`; unauthenticated tests need a separate request context without credentials.

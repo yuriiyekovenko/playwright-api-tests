@@ -1,5 +1,5 @@
-import { test, expect } from '../../fixtures/fixtures';
-import { PetTypeFactory } from '../../factories/pet-type-factory';
+import { test, expect } from '../fixtures/fixtures';
+import { PetTypeFactory } from '../factories/pet-type-factory';
 import { faker } from '@faker-js/faker';
 
 /**

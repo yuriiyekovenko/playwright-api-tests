@@ -181,11 +181,11 @@ Create (POST) is in 5.1.
 
 ## 6. Existing coverage and gaps
 
-| Area                          | Existing automated tests                                                                                                                                        | Proposed                                          | Gap        |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ---------- |
-| Pets (any operation)          | none (`tests/api/` has only `pet-types-api.spec.ts` and `owners-api.spec.ts`; Owners spec asserts only `pets: []` on a new owner and ignores `pets` in payload) | PET-C 22, G 5, L 7, U 11, D 6, O 7, X 1, A 2 = 61 | 100%       |
-| Pets client / factory / types | none (`pets` typed `unknown[]` in `types/owners.ts`)                                                                                                            | Section 3                                         | all        |
-| OWN-PET-01..09 from owners.md | not implemented                                                                                                                                                 | mapped to PET-* (Section 4)                       | superseded |
+| Area                          | Existing automated tests                                                                                                                                    | Proposed                                          | Gap        |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ---------- |
+| Pets (any operation)          | none (`tests/` has only `pet-types-api.spec.ts` and `owners-api.spec.ts`; Owners spec asserts only `pets: []` on a new owner and ignores `pets` in payload) | PET-C 22, G 5, L 7, U 11, D 6, O 7, X 1, A 2 = 61 | 100%       |
+| Pets client / factory / types | none (`pets` typed `unknown[]` in `types/owners.ts`)                                                                                                        | Section 3                                         | all        |
+| OWN-PET-01..09 from owners.md | not implemented                                                                                                                                             | mapped to PET-* (Section 4)                       | superseded |
 
 De-duplication rules applied: field boundaries (name 30/31, birthDate rules, type shape) are exercised once on create (PET-C-04..C-16) and only sampled on update (PET-U-04/05/11, PET-O-06). Malformed body and invalid-id behavior are each defined once and reused as parameters (PET-C-19/U-10, per-resource PET-G-05/U-07/D-06/O-07/C-18 differ in path template and method). Auth is one parametrized scenario. Owner-not-found is covered once for create (PET-C-17) and once per update/get path (PET-O-02/O-05). Existing OWN-* scenarios for owner aggregate (OWN-G-07, OWN-D-04) are not repeated.
 

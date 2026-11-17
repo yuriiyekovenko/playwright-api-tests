@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - `npm ci` — install dependencies
 - `npm test` — run all tests (`playwright test`)
-- `npx playwright test tests/api/pet-types-api.spec.ts -g "Create new PetType"` — run a single file / test by title
+- `npx playwright test tests/pet-types-api.spec.ts -g "Create new PetType"` — run a single file / test by title
 - `npm run typecheck` — `tsc -p tsconfig.json`
 - `npm run format` / `npm run format:check` — Prettier (4-space indent, see `.prettierrc`)
 - `npm run test:ui` / `test:debug` / `test:report` — Playwright UI mode, debugger, HTML report
@@ -30,7 +30,7 @@ Layered, all wired through a Playwright fixture:
     - Unsuffixed methods are happy-path: assert the expected status (via `expectStatus`, with the response body in the failure message) and return typed data.
 - `types/` — request/response types (`Create*` for payloads without `id`).
 - `factories/` — faker-based test data builders (e.g. `PetTypeFactory.random()` uses UUID names to avoid collisions, since tests run fully parallel against one shared service).
-- `tests/api/*.spec.ts` — specs; `fullyParallel` is on, so tests must create their own data and not depend on shared state.
+- `tests/*.spec.ts` — specs; `fullyParallel` is on, so tests must create their own data and not depend on shared state.
 
 ## API Specification
 
