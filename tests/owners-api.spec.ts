@@ -179,17 +179,12 @@ test('OWN-L-03 List owners with no matching lastName returns empty list', async 
 
 // ---------- Update ----------
 
-test('OWN-U-01 Update all fields of existing owner', async ({ client }) => {
-    const owner = await client.owners.create(OwnerFactory.random());
-    const response = await client.owners.updateRaw(owner.id, OwnerFactory.random());
-    expect(response.status()).toBe(204);
-    expect(await response.text()).toBe('');
-});
-
-test('OWN-U-02 Update is persisted', async ({ client }) => {
+test('OWN-U-01 Update all fields of existing owner is persisted', async ({ client }) => {
     const owner = await client.owners.create(OwnerFactory.random());
     const newData = OwnerFactory.random();
-    await client.owners.update(owner.id, newData);
+    const response = await client.owners.updateRaw(owner.id, newData);
+    expect(response.status()).toBe(204);
+    expect(await response.text()).toBe('');
     expect(await client.owners.get(owner.id)).toEqual({
         ...newData,
         id: owner.id,
@@ -204,22 +199,17 @@ test('OWN-U-04 Update non-existent owner returns 404', async ({ client }) => {
 
 // ---------- Delete ----------
 
-test('OWN-D-01 Delete existing owner', async ({ client }) => {
+test('OWN-D-01 Delete existing owner and it is gone', async ({ client }) => {
     const owner = await client.owners.create(OwnerFactory.random());
     const response = await client.owners.deleteRaw(owner.id);
     expect(response.status()).toBe(204);
     expect(await response.text()).toBe('');
-});
-
-test('OWN-D-02 Deleted owner is gone', async ({ client }) => {
-    const owner = await client.owners.create(OwnerFactory.random());
-    await client.owners.delete(owner.id);
 
     expect((await client.owners.getRaw(owner.id)).status()).toBe(404);
 
-    const response = await client.owners.getPageRaw({ lastName: owner.lastName });
-    expect(response.status()).toBe(200);
-    expect((await response.json()).content).toEqual([]);
+    const page = await client.owners.getPageRaw({ lastName: owner.lastName });
+    expect(page.status()).toBe(200);
+    expect((await page.json()).content).toEqual([]);
 });
 
 test('OWN-D-03 Delete non-existent and already deleted owner returns 404', async ({ client }) => {

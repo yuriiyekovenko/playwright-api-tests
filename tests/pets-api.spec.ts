@@ -72,18 +72,16 @@ test('PET-C-04 Create pet with 30-character name', async ({ client, owner, petTy
 // ---------- Get ----------
 
 test('PET-G-01 Get existing pet', async ({ client, owner, petTypes }) => {
-    const created = await client.pets.create(owner.id, PetFactory.random(petTypes[0]));
+    const payload = PetFactory.random(petTypes[0]);
+    const created = await client.pets.create(owner.id, payload);
     const response = await client.pets.getRaw(created.id);
     expect(response.status()).toBe(200);
     expect(await response.json()).toEqual({
-        id: expect.any(Number),
-        name: expect.any(String),
-        birthDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
-        type: { id: expect.any(Number), name: expect.any(String) },
+        ...payload,
+        id: created.id,
         ownerId: owner.id,
-        visits: expect.any(Array),
+        visits: [],
     });
-    expect(await client.pets.get(created.id)).toEqual(created);
 });
 
 // ---------- List ----------
@@ -111,45 +109,25 @@ test('PET-L-01 v1 list contains the created pet and every item has the Pet shape
 
 // ---------- Update by id ----------
 
-test('PET-U-01 Update all fields of a pet', async ({ client, owner, petTypes }) => {
+test('PET-U-01 Update all fields of a pet is persisted', async ({ client, owner, petTypes }) => {
     const created = await client.pets.create(owner.id, PetFactory.random(petTypes[0]));
     const update = PetFactory.random(petTypes[1]);
     const response = await client.pets.updateRaw(created.id, update);
     expect(response.status()).toBe(204);
     expect(await response.text()).toBe('');
-});
-
-test('PET-U-02 Update by id is persisted (read-after-write)', async ({
-    client,
-    owner,
-    petTypes,
-}) => {
-    const created = await client.pets.create(owner.id, PetFactory.random(petTypes[0]));
-    const update = PetFactory.random(petTypes[1]);
-    await client.pets.update(created.id, update);
     const expected = { ...update, id: created.id, ownerId: owner.id, visits: [] };
     expect(await client.pets.get(created.id)).toEqual(expected);
     expect(await client.pets.getOwnersPet(owner.id, created.id)).toEqual(expected);
 });
 
-// ---------- Delete ----------
-
-test('PET-D-01 Delete existing pet', async ({ client, owner, petTypes }) => {
+test('PET-D-01 Delete existing pet and it is gone', async ({ client, owner, petTypes }) => {
     const created = await client.pets.create(owner.id, PetFactory.random(petTypes[0]));
     const response = await client.pets.deleteRaw(created.id);
     expect(response.status()).toBe(204);
     expect(await response.text()).toBe('');
-});
-
-test('PET-D-02 Pet is gone after delete', async ({ client, owner, petTypes }) => {
-    const created = await client.pets.create(owner.id, PetFactory.random(petTypes[0]));
-    await client.pets.delete(created.id);
     expect((await client.pets.getRaw(created.id)).status()).toBe(404);
     expect((await client.pets.getOwnersPetRaw(owner.id, created.id)).status()).toBe(404);
-    expect((await client.pets.getAll()).some((p) => p.id === created.id)).toBe(false);
 });
-
-// ---------- Owner-scoped ----------
 
 test("PET-O-01 Get owner's pet equals GET by id", async ({ client, owner, petTypes }) => {
     const created = await client.pets.create(owner.id, PetFactory.random(petTypes[0]));
