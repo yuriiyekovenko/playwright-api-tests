@@ -32,7 +32,7 @@ export default defineConfig({
         ? undefined
         : {
               command:
-                  'docker run --rm -e PETCLINIC_SECURITY_ENABLE=true -p 9966:9966 springcommunity/spring-petclinic-rest',
+                  'docker run --rm -e PETCLINIC_SECURITY_ENABLE=true -p 9966:9966 springcommunity/spring-petclinic-rest:4.0.2',
               url: `${env.apiBaseUrl}/petclinic/actuator/health`,
               reuseExistingServer: true,
 
