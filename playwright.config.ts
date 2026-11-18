@@ -17,6 +17,7 @@ export default defineConfig({
         ['list'],
         ['github'],
         ['html', { open: 'on-failure', outputFolder: 'playwright-report' }],
+        ['junit', { outputFile: 'test-results/junit.xml' }],
     ],
     use: {
         baseURL: env.apiBaseUrl,

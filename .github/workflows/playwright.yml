@@ -4,10 +4,15 @@ on:
         branches: [main]
     pull_request:
         branches: [main]
+permissions:
+    contents: read
 jobs:
     test:
         timeout-minutes: 30
         runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            checks: write
         services:
             petclinic:
                 image: springcommunity/spring-petclinic-rest
@@ -41,6 +46,15 @@ jobs:
 
             - name: Run Playwright tests
               run: npx playwright test
+
+            - name: Publish test results
+              uses: dorny/test-reporter@v2
+              if: ${{ !cancelled() }}
+              with:
+                  name: Playwright results
+                  path: test-results/junit.xml
+                  reporter: java-junit
+                  fail-on-error: false
 
             - uses: actions/upload-artifact@v6
               if: ${{ !cancelled() }}
